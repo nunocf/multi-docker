@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+  before_install:
+    - docker build -t nunocf/react-test -f ./client/Dockerfile.dev ./client
+
+  script:
+    - docker run nunocf/react-test npm test -- --coverage
+  
+  after_success:
+    - docker build -t nunocf/multi-client ./client
+    - docker build -t nunocf/multi-nginx ./nginx
+    - docker build -t nunocf/multi-server ./server
+    - docker build -t nunocf/multi-worker ./worker
+
+    # Log in to docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+    - docker push nunocf/multi-client
+    - docker push nunocf/multi-nginx
+    - docker push nunocf/multi-server
+    - docker push nunocf/multi-worker
